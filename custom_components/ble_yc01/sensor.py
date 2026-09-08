@@ -1,9 +1,8 @@
 """Support for YC01 ble sensors."""
+
 from __future__ import annotations
 
-import logging
-
-from .BLE_YC01 import YC01Device
+from datetime import datetime
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
@@ -15,9 +14,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfElectricPotential,
     UnitOfConductivity,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
@@ -28,11 +27,9 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .BLE_YC01 import YC01Device
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "EC": SensorEntityDescription(
@@ -102,31 +99,31 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the YC01 BLE sensors."""
-    is_metric = hass.config.units is METRIC_SYSTEM
-
     coordinator: DataUpdateCoordinator[YC01Device] = hass.data[DOMAIN][entry.entry_id]
-    sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
-    entities = []
-    _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
-    for sensor_type, sensor_value in coordinator.data.sensors.items():
-        if sensor_type not in sensors_mapping:
-            _LOGGER.debug(
-                "Unknown sensor type detected: %s, %s",
-                sensor_type,
-                sensor_value,
+    # Keep the upstream entity IDs, but do not present old readings as fresh data.
+    async_add_entities(
+        [
+            YC01Sensor(coordinator, coordinator.data, description)
+            for description in SENSORS_MAPPING_TEMPLATE.values()
+        ]
+        + [
+            YC01KeepAliveSensor(
+                coordinator,
+                coordinator.data,
+                SensorEntityDescription(
+                    key="last_keep_alive",
+                    name="Last successful keep-alive",
+                    device_class=SensorDeviceClass.TIMESTAMP,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                ),
             )
-            continue
-        entities.append(
-            YC01Sensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
-        )
-
-    async_add_entities(entities)
+        ]
+    )
 
 
 class YC01Sensor(CoordinatorEntity[DataUpdateCoordinator[YC01Device]], SensorEntity):
     """YC01 BLE sensors for the device."""
 
-    #_attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
 
     def __init__(
@@ -159,9 +156,25 @@ class YC01Sensor(CoordinatorEntity[DataUpdateCoordinator[YC01Device]], SensorEnt
         )
 
     @property
+    def available(self) -> bool:
+        """Measurements are unavailable while characteristic reads are disabled."""
+        return False
+
+    @property
     def native_value(self) -> StateType:
-        """Return the value reported by the sensor."""
-        try:
-            return self.coordinator.data.sensors[self.entity_description.key]
-        except KeyError:
-            return None
+        """No measurement is collected by this experiment."""
+        return None
+
+
+class YC01KeepAliveSensor(YC01Sensor):
+    """Report when a connection and disconnect both completed successfully."""
+
+    @property
+    def available(self) -> bool:
+        """Reflect the outcome of the latest keep-alive attempt."""
+        return self.coordinator.last_update_success
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the last completed cycle timestamp."""
+        return self.coordinator.data.last_keep_alive

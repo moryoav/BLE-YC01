@@ -1,0 +1,5 @@
+pytest-homeassistant-custom-component==0.13.364
+bleak-retry-connector==4.7.0
+aiousbwatcher==1.1.2
+serialx==1.10.0
+ruff==0.16.6

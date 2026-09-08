@@ -19,5 +19,19 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Keep-alive interval",
+        "description": "Connect and disconnect at this interval without reading FF02. Pool measurements are unavailable during this experiment.",
+        "data": {
+          "keep_alive_interval": "Keep-alive interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_interval": "Enter a whole number of minutes greater than zero."
+    }
   }
 }
