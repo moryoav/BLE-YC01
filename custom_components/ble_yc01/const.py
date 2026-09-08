@@ -2,4 +2,5 @@
 
 DOMAIN = "ble_yc01"
 
-DEFAULT_SCAN_INTERVAL = 1800
+CONF_POLL_INTERVAL = "poll_interval_minutes"
+DEFAULT_POLL_INTERVAL = 30

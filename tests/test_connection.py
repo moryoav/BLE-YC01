@@ -13,7 +13,7 @@ from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.ble_yc01.BLE_YC01.parser import READ_UUID
-from custom_components.ble_yc01.const import DOMAIN
+from custom_components.ble_yc01.const import CONF_POLL_INTERVAL, DOMAIN
 
 from .conftest import ADDRESS
 
@@ -335,3 +335,43 @@ async def test_failed_disconnect_does_not_allocate_another_slot(
     assert coordinator.connection.is_connected
     assert transport.factory.call_count == 2
     transport.clients[1].read_gatt_char.assert_not_awaited()
+
+
+@pytest.mark.parametrize("initial,changed", [(30, 1), (1, 5)])
+async def test_options_reschedule_without_reconnecting(
+    hass, entry, transport, freezer, initial, changed
+):
+    """Shorter and longer intervals replace the pending read, retaining the link."""
+    hass.config_entries.async_update_entry(entry, options={CONF_POLL_INTERVAL: initial})
+    coordinator = await setup_entry(hass, entry)
+    assert coordinator.update_interval == timedelta(minutes=initial)
+    client = transport.clients[0]
+    await advance(hass, freezer, 20)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_POLL_INTERVAL: changed}
+    )
+    await hass.async_block_till_done()
+    assert hass.data[DOMAIN][entry.entry_id] is coordinator
+    assert coordinator.update_interval == timedelta(minutes=changed)
+    assert client.read_gatt_char.await_count == 1
+    await advance(hass, freezer, changed * 60 - 2)
+    assert client.read_gatt_char.await_count == 1
+    await advance(hass, freezer, 3)
+    assert client.read_gatt_char.await_count == 2
+    await advance(hass, freezer, changed * 60 + 1)
+    assert client.read_gatt_char.await_count == 3
+    assert transport.factory.call_count == 1
+    client.disconnect.assert_not_awaited()
+
+
+async def test_options_respect_disabled_polling(hass, entry, transport, freezer):
+    """Changing the interval cannot turn disabled polling back on."""
+    hass.config_entries.async_update_entry(entry, pref_disable_polling=True)
+    coordinator = await setup_entry(hass, entry)
+    hass.config_entries.async_update_entry(entry, options={CONF_POLL_INTERVAL: 1})
+    await hass.async_block_till_done()
+    await advance(hass, freezer, 121)
+    transport.clients[0].read_gatt_char.assert_awaited_once()
+    assert coordinator.connection.is_connected
+    transport.clients[0].disconnect.assert_not_awaited()

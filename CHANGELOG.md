@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Added a data polling interval in minutes during setup and through Configure, defaulting to 30 minutes.
+- Applied interval changes without reloading the integration, disconnecting, or reading measurements immediately.
+- Preserved the 30-minute default for existing installations.
+
 ## 1.2.0
 
 - Added a persistent Bluetooth connection to keep the device connected between measurements.

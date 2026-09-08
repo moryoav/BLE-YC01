@@ -4,7 +4,7 @@ I maintain this fork of [jdeath/BLE-YC01](https://github.com/jdeath/BLE-YC01) to
 
 ## Connection and measurements
 
-The integration connects when its configuration entry loads, reads the initial measurements from `FF02`, and **keeps that connection open**. It reads measurements again every **30 minutes** over the same connection.
+The integration connects when its configuration entry loads, reads the initial measurements from `FF02`, and **keeps that connection open**. It reads measurements again every **30 minutes by default** over the same connection.
 
 If the link drops, the integration attempts to reconnect immediately. Failed attempts retry after 5 seconds. It also checks the client's local connection state every 5 seconds in case a disconnect callback is missed. These checks and reconnects do not read any characteristics or reset the measurement schedule.
 
@@ -26,7 +26,9 @@ If BLE-YC01 is already configured, update the files through HACS and restart Hom
 
 ## Measurement interval
 
-The original `DEFAULT_SCAN_INTERVAL = 1800` in `custom_components/ble_yc01/const.py` controls the 30-minute measurement interval. The connection remains open between readings.
+Set **Data polling interval (minutes)** when adding the device, or change it later under **Settings > Devices & services > BLE-YC01 > Configure**. Enter a positive whole number of minutes. The default is **30 minutes**, including for existing installations.
+
+Saving a different interval starts the new countdown immediately without reading measurements or interrupting the Bluetooth connection. For example, selecting 5 minutes schedules the next read in 5 minutes and repeats every 5 minutes. The connection remains open between readings. Turning off **Enable polling for updates** still disables scheduled reads.
 
 ## Development
 

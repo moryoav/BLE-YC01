@@ -5,11 +5,15 @@
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]",
+          "poll_interval_minutes": "Data polling interval (minutes)"
         }
       },
       "bluetooth_confirm": {
-        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]",
+        "data": {
+          "poll_interval_minutes": "Data polling interval (minutes)"
+        }
       }
     },
     "abort": {
@@ -18,6 +22,23 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "invalid_interval": "Enter a positive whole number of minutes within the supported range."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Measurement polling",
+        "description": "Set how often to read measurements. The Bluetooth connection stays open. The new interval starts when you save.",
+        "data": {
+          "poll_interval_minutes": "Data polling interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_interval": "Enter a positive whole number of minutes within the supported range."
     }
   }
 }

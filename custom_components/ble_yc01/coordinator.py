@@ -1,4 +1,4 @@
-"""Read measurements every 30 minutes while retaining the Bluetooth link."""
+"""Read measurements on a configurable schedule while retaining the Bluetooth link."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from datetime import timedelta
 
 from bleak import BleakError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .BLE_YC01 import YC01Device
 from .connection import YC01Connection
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,9 +26,21 @@ class YC01Coordinator(DataUpdateCoordinator[YC01Device]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(
+                minutes=entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
+            ),
         )
         self.connection = YC01Connection(hass, entry, self.async_update_listeners)
+
+    @callback
+    def async_set_poll_interval(self, minutes: int) -> None:
+        """Start the new interval now without reading or reconnecting."""
+        interval = timedelta(minutes=minutes)
+        if self.update_interval == interval or self._shutdown_requested:
+            return
+        self.update_interval = interval
+        self._unschedule_refresh()
+        self._schedule_refresh()
 
     async def _async_update_data(self) -> YC01Device:
         """Fetch measurements over the existing connection."""

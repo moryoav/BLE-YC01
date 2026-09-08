@@ -1,23 +1,44 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured",
-            "already_in_progress": "Configuration flow is already in progress",
-            "cannot_connect": "Failed to connect",
-            "no_devices_found": "No devices found on the network",
-            "unknown": "Unexpected error"
-        },
-        "flow_title": "{name}",
-        "step": {
-            "bluetooth_confirm": {
-                "description": "Do you want to set up {name}?"
-            },
-            "user": {
-                "data": {
-                    "address": "Device"
-                },
-                "description": "Choose a device to set up"
-            }
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration flow is already in progress",
+      "cannot_connect": "Failed to connect",
+      "no_devices_found": "No devices found on the network",
+      "unknown": "Unexpected error"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Do you want to set up {name}?",
+        "data": {
+          "poll_interval_minutes": "Data polling interval (minutes)"
         }
+      },
+      "user": {
+        "data": {
+          "address": "Device",
+          "poll_interval_minutes": "Data polling interval (minutes)"
+        },
+        "description": "Choose a device to set up"
+      }
+    },
+    "error": {
+      "invalid_interval": "Enter a positive whole number of minutes within the supported range."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Measurement polling",
+        "description": "Set how often to read measurements. The Bluetooth connection stays open. The new interval starts when you save.",
+        "data": {
+          "poll_interval_minutes": "Data polling interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_interval": "Enter a positive whole number of minutes within the supported range."
+    }
+  }
 }
