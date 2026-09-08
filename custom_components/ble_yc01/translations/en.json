@@ -46,6 +46,11 @@
       "refresh": {
         "name": "Refresh"
       }
+    },
+    "binary_sensor": {
+      "connection": {
+        "name": "Bluetooth connection"
+      }
     }
   }
 }

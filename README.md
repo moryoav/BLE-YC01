@@ -30,6 +30,14 @@ Set **Data polling interval (minutes)** when adding the device, or change it lat
 
 Saving a different interval starts the new countdown immediately without reading measurements or interrupting the Bluetooth connection. For example, selecting 5 minutes schedules the next read in 5 minutes and repeats every 5 minutes. The connection remains open between readings. Turning off **Enable polling for updates** still disables scheduled reads.
 
+## Bluetooth connection status
+
+The diagnostic binary sensor **Bluetooth connection** shows **Connected** (`on`) while the integration holds a usable connection and **Disconnected** (`off`) when it loses that connection, including during reconnection attempts. It stays available during disconnects so automations can trigger on `off`.
+
+The sensor updates as soon as Home Assistant receives the Bluetooth disconnect notification, independently of the measurement interval. If that callback is missed but the client reports disconnected, the existing 5-second connection check detects it. Actual detection still depends on when the adapter or proxy reports the loss. Reconnection changes the sensor back to `on` without waiting for a measurement read.
+
+This works with automatic measurement polling disabled and adds no Bluetooth reads. A decoding failure alone does not mean Bluetooth is disconnected. Unloading the integration or stopping Home Assistant makes its entities unavailable, as usual.
+
 ## Bluetooth signal strength
 
 The diagnostic sensor **Bluetooth RSSI (last advertisement)** reports signal strength in dBm from Home Assistant's preferred connectable scanner. A value closer to zero means stronger reception. The `source` attribute identifies the reporting adapter or proxy, and `last_received` records when that advertisement was observed.

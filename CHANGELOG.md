@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+
+- Added a diagnostic Bluetooth connection binary sensor that reports connected or disconnected independently of measurement polling.
+- Kept connection status readable during disconnects and measurement failures, using existing disconnect events and the 5-second fallback check.
+
 ## 1.6.0
 
 - Added a diagnostic Bluetooth RSSI sensor in dBm using the last advertisement from a connectable scanner.
