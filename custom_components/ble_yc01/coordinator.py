@@ -8,6 +8,7 @@ from datetime import timedelta
 from bleak import BleakError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .BLE_YC01 import YC01Device
@@ -31,6 +32,28 @@ class YC01Coordinator(DataUpdateCoordinator[YC01Device]):
             ),
         )
         self.connection = YC01Connection(hass, entry, self.async_update_listeners)
+
+    async def async_refresh_now(self) -> None:
+        """Read immediately and count the next interval from the button press."""
+        pressed_at = self.hass.loop.time()
+        # Bypass request debouncing so each press performs a read. The coordinator
+        # still serializes refreshes and cancels the previous scheduled read.
+        await self.async_refresh()
+        if (
+            self._shutdown_requested
+            or self.hass.is_stopping
+            or self.config_entry.pref_disable_polling
+            or self.update_interval is None
+        ):
+            return
+        self._unschedule_refresh()
+        remaining = max(
+            0,
+            self.update_interval.total_seconds() - (self.hass.loop.time() - pressed_at),
+        )
+        self._unsub_refresh = async_call_later(
+            self.hass, remaining, self._handle_refresh_interval
+        )
 
     @callback
     def async_set_poll_interval(self, minutes: int) -> None:

@@ -40,5 +40,12 @@
     "error": {
       "invalid_interval": "Enter a positive whole number of minutes within the supported range."
     }
+  },
+  "entity": {
+    "button": {
+      "refresh": {
+        "name": "Refresh"
+      }
+    }
   }
 }

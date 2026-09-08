@@ -16,5 +16,5 @@
   "documentation": "https://github.com/moryoav/BLE-YC01",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/moryoav/BLE-YC01/issues",
-  "version": "1.3.0"
+  "version": "1.4.0"
 }

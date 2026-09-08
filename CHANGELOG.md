@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- Added a Refresh button to read measurements immediately without disconnecting.
+- Restarted the polling countdown from each button press, replacing the previous scheduled read.
+- Allowed manual reads while automatic polling is disabled.
+
 ## 1.3.0
 
 - Added a data polling interval in minutes during setup and through Configure, defaulting to 30 minutes.
