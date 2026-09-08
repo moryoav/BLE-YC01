@@ -1,75 +1,72 @@
-"""The YC01 BLE keep-alive experiment."""
-
+"""The YC01 BLE integration."""
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
 
-from bleak import BleakError
+from .BLE_YC01 import YC01BluetoothDeviceData
+
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .BLE_YC01 import YC01BluetoothDeviceData, YC01Device
-from .const import CONF_KEEP_ALIVE_INTERVAL, DEFAULT_KEEP_ALIVE_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up periodic connection-only keep-alive for a device."""
+    """Set up YC01 BLE device from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     address = entry.unique_id
+
+    elevation = hass.config.elevation
+    is_metric = hass.config.units is METRIC_SYSTEM
     assert address is not None
-    yc01 = YC01BluetoothDeviceData(_LOGGER)
 
-    async def _async_keep_alive() -> YC01Device:
-        """Use the currently reachable adapter for each connection cycle."""
-        ble_device = bluetooth.async_ble_device_from_address(
-            hass, address, connectable=True
-        )
-        if ble_device is None:
-            raise UpdateFailed(f"Could not find YC01 device with address {address}")
+    ble_device = bluetooth.async_ble_device_from_address(hass, address)
+
+    if not ble_device:
+        raise ConfigEntryNotReady(f"Could not find YC01 device with address {address}")
+
+    async def _async_update_method():
+        """Get data from YC01 BLE."""
+        ble_device = bluetooth.async_ble_device_from_address(hass, address)
+        yc01 = YC01BluetoothDeviceData(_LOGGER)
+
         try:
-            return await yc01.keep_alive(ble_device)
-        except (BleakError, TimeoutError, OSError) as err:
-            raise UpdateFailed(f"Unable to complete keep-alive: {err}") from err
+            data = await yc01.update_device(ble_device)
+        except Exception as err:
+            raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
+        return data
+        
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        config_entry=entry,
         name=DOMAIN,
-        update_method=_async_keep_alive,
-        update_interval=timedelta(
-            minutes=entry.options.get(
-                CONF_KEEP_ALIVE_INTERVAL, DEFAULT_KEEP_ALIVE_INTERVAL
-            )
-        ),
+        update_method=_async_update_method,
+        update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     )
+
     await coordinator.async_config_entry_first_refresh()
+
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    @callback
-    def _async_keep_alive_updated() -> None:
-        """Keep the timer subscribed even when every sensor is disabled."""
-
-    entry.async_on_unload(coordinator.async_add_listener(_async_keep_alive_updated))
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Apply the new interval and dispose of the previous timer."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload the entry and stop its keep-alive timer and connection tasks."""
+    """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok
