@@ -1,9 +1,8 @@
 """Support for YC01 ble sensors."""
+
 from __future__ import annotations
 
 import logging
-
-from .BLE_YC01 import YC01Device
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
@@ -15,22 +14,22 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfElectricPotential,
     UnitOfConductivity,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
-    DataUpdateCoordinator,
 )
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .BLE_YC01 import YC01Device
 from .const import DOMAIN
+from .coordinator import YC01Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,9 +101,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the YC01 BLE sensors."""
-    is_metric = hass.config.units is METRIC_SYSTEM
 
-    coordinator: DataUpdateCoordinator[YC01Device] = hass.data[DOMAIN][entry.entry_id]
+    coordinator: YC01Coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
@@ -123,15 +121,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class YC01Sensor(CoordinatorEntity[DataUpdateCoordinator[YC01Device]], SensorEntity):
+class YC01Sensor(CoordinatorEntity[YC01Coordinator], SensorEntity):
     """YC01 BLE sensors for the device."""
 
-    #_attr_state_class = SensorStateClass.MEASUREMENT
+    # _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: YC01Coordinator,
         YC01_device: YC01Device,
         entity_description: SensorEntityDescription,
     ) -> None:
@@ -157,6 +155,11 @@ class YC01Sensor(CoordinatorEntity[DataUpdateCoordinator[YC01Device]], SensorEnt
             hw_version=YC01_device.hw_version,
             sw_version=YC01_device.sw_version,
         )
+
+    @property
+    def available(self) -> bool:
+        """Mark measurements unavailable while the Bluetooth connection is down."""
+        return super().available and self.coordinator.connection.is_connected
 
     @property
     def native_value(self) -> StateType:
