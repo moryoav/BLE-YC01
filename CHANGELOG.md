@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+
+- Added a diagnostic Bluetooth RSSI sensor in dBm using the last advertisement from a connectable scanner.
+- Included the reporting source and original observation timestamp to identify potentially stale readings.
+- Updated signal strength passively without changing the persistent connection or measurement schedule.
+
 ## 1.5.0
 
 - Added an Estimated Bromine sensor in ppm, calculated as the chlorine reading multiplied by 2.25.

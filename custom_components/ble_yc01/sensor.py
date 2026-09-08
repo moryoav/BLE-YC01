@@ -30,6 +30,7 @@ from homeassistant.helpers.update_coordinator import (
 from .BLE_YC01 import YC01Device
 from .const import DOMAIN
 from .coordinator import YC01Coordinator
+from .signal_strength import YC01SignalStrengthSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,6 +127,7 @@ async def async_setup_entry(
             YC01Sensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
         )
 
+    entities.append(YC01SignalStrengthSensor(coordinator.data.address))
     async_add_entities(entities)
 
 

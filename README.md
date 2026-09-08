@@ -30,6 +30,14 @@ Set **Data polling interval (minutes)** when adding the device, or change it lat
 
 Saving a different interval starts the new countdown immediately without reading measurements or interrupting the Bluetooth connection. For example, selecting 5 minutes schedules the next read in 5 minutes and repeats every 5 minutes. The connection remains open between readings. Turning off **Enable polling for updates** still disables scheduled reads.
 
+## Bluetooth signal strength
+
+The diagnostic sensor **Bluetooth RSSI (last advertisement)** reports signal strength in dBm from Home Assistant's preferred connectable scanner. A value closer to zero means stronger reception. The `source` attribute identifies the reporting adapter or proxy, and `last_received` records when that advertisement was observed.
+
+This is [advertisement RSSI](https://developers.home-assistant.io/docs/core/bluetooth/api/), not a live RSSI measurement of the held connection. The reporting proxy may differ from the proxy holding that connection. If the YC01 stops advertising while connected, the sensor keeps its last value and original timestamp. It is unavailable until RSSI data is available.
+
+Updates use passive advertisement callbacks, independently of measurement polling. They add no GATT reads, connections, or disconnections.
+
 ## Estimated bromine
 
 **Estimated Bromine** is calculated as **Free Chlorine × 2.25**, in ppm, and updates with each scheduled or manual measurement read. For example, 0.8 ppm chlorine-equivalent gives 1.8 ppm estimated bromine. It uses the same reading and adds no Bluetooth requests.
