@@ -103,6 +103,10 @@ class YC01BluetoothDeviceData:
         else:
             device.sensors["cloro"] = cloro / 10.0
 
+        # Express the chlorine-equivalent reading as bromine, not a separate
+        # measurement. Three decimals preserve the 0.1 ppm source resolution.
+        device.sensors["estimated_bromine"] = round(device.sensors["cloro"] * 2.25, 3)
+
         device.sensors["pH"] = self.decode_position(decodedData, 3) / 100.0
 
         device.sensors["ORP"] = self.decode_position(decodedData, 9) / 1000.0

@@ -30,6 +30,12 @@ Set **Data polling interval (minutes)** when adding the device, or change it lat
 
 Saving a different interval starts the new countdown immediately without reading measurements or interrupting the Bluetooth connection. For example, selecting 5 minutes schedules the next read in 5 minutes and repeats every 5 minutes. The connection remains open between readings. Turning off **Enable polling for updates** still disables scheduled reads.
 
+## Estimated bromine
+
+**Estimated Bromine** is calculated as **Free Chlorine × 2.25**, in ppm, and updates with each scheduled or manual measurement read. For example, 0.8 ppm chlorine-equivalent gives 1.8 ppm estimated bromine. It uses the same reading and adds no Bluetooth requests.
+
+The factor follows [Hach's chlorine-to-bromine conversion table](https://cdn.hach.com/7FYZVWYB/at/338grtph9r8n6xvj83f6sn/DOC3165301173.pdf). This expresses a chlorine-equivalent result on a bromine scale; it does not establish that bromine is present or validate the YC01's accuracy in brominated water. The entity is an estimate derived from the device's reported chlorine value, not a separate bromine measurement.
+
 ## Manual refresh
 
 Press the device's **Refresh** button to read measurements immediately over the existing Bluetooth connection. Each press restarts the polling countdown from the time you pressed it. For example, with a 30-minute interval, pressing Refresh 15 minutes after the last read updates the data now and schedules the next read 30 minutes after the press.

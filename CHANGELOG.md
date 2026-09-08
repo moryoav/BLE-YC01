@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0
+
+- Added an Estimated Bromine sensor in ppm, calculated as the chlorine reading multiplied by 2.25.
+- Updated the estimate with each measurement read without additional Bluetooth traffic.
+
 ## 1.4.0
 
 - Added a Refresh button to read measurements immediately without disconnecting.

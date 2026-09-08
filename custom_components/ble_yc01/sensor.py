@@ -84,6 +84,14 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:chemical-weapon",
     ),
+    "estimated_bromine": SensorEntityDescription(
+        key="estimated_bromine",
+        name="Estimated Bromine",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        suggested_display_precision=3,
+        icon="mdi:flask-outline",
+    ),
     "temperature": SensorEntityDescription(
         key="temperature",
         name="Temperature",
